@@ -1,0 +1,47 @@
+version: '3.8'
+
+networks:
+  platform_network:
+    driver: bridge
+
+services:
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: platform_postgres
+    environment:
+      POSTGRES_USER: platform_user
+      POSTGRES_PASSWORD: platform_password
+      POSTGRES_DB: cross_hospital_platform
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/data/postgresql
+      - ./deployment/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - platform_network
+    restart: always
+
+  mlflow_server:
+    image: ghcr.io/mlflow/mlflow:v2.12.1
+    container_name: platform_mlflow
+    ports:
+      - "5000:5000"
+    environment:
+      - BACKEND_STORE_URI=postgresql://platform_user:platform_password@postgres_db:5432/cross_hospital_platform
+      - ARTIFACT_ROOT=/mlflow/artifacts
+    volumes:
+      - ./deployment/mlflow/artifacts:/mlflow/artifacts
+    command: >
+      mlflow server 
+      --backend-store-uri postgresql://platform_user:platform_password@postgres_db:5432/cross_hospital_platform
+      --default-artifact-root /mlflow/artifacts
+      --host 0.0.0.0
+      --port 5000
+    depends_on:
+      - postgres_db
+    networks:
+      - platform_network
+    restart: always
+
+volumes:
+  pg_data:
