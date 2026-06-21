@@ -5,8 +5,7 @@ from backend.app.models.platform_models import InferenceRequest
 import os
 
 # Fetch object storage configurations from environment variables
-MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT_URL_INTERNAL", "http://minio_storage:9000")
-AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID", "minio_admin_user")
+MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT_URL_INTERNAL") if os.getenv("RUNNING_IN_DOCKER") else os.getenv("MINIO_ENDPOINT_URL_LOCAL", "http://localhost:9000")
 AWS_SECRET_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "minio_admin_password")
 BUCKET_NAME = "medical-images"
 
