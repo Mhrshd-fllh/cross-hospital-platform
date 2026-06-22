@@ -1,5 +1,5 @@
 import re
-from typing import dict, Any
+from typing import Dict, Any
 
 class ClinicalAnonymizer:
     """
@@ -14,7 +14,7 @@ class ClinicalAnonymizer:
     }
 
     @classmethod
-    def anonymize_metadata(cls, raw_metadata: dict[str, Any]) -> dict[str, Any]:
+    def anonymize_metadata(cls, raw_metadata: Dict[str, Any]) -> Dict[str, Any]:
         """
         Removes known sensitive fields and scrubs potential PII patterns (like national IDs or phone numbers).
         """

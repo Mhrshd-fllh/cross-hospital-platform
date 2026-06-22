@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, s
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from backend.app.core.database import get_db
-from backend.app.schemas.feedback_schemas import FeedbackSubmitSchema
+from backend.app.schema.feedback_schemas import FeedbackSubmitSchema
 from backend.app.models.platform_models import InferenceRequest, FeedbackLog
 from backend.app.crud import inference_crud
 from backend.app.core.orchestrator import ClinicalPipelineOrchestrator
