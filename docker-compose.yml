@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: platform_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - pg_data:/var/data/postgresql
+      - ./deployment/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - platform_network
+    restart: always
+
+  mlflow_server:
+    image: docker.devneeds.ir/mlflow/mlflow:latest
+    container_name: platform_mlflow
+    ports:
+      - "${MLFLOW_TRACKING_PORT}:5000"
+    environment:
+      - BACKEND_STORE_URI=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}
+      - ARTIFACT_ROOT=s3://mlflow-artifacts/
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - MLFLOW_S3_ENDPOINT_URL=${MLFLOW_S3_ENDPOINT_URL}
+      - MLFLOW_S3_IGNORE_TLS=${MLFLOW_S3_IGNORE_TLS}
+    volumes:
+      - ./deployment/mlflow/artifacts:/mlflow/artifacts
+    command: >
+      mlflow server 
+      --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}
+      --default-artifact-root s3://mlflow-artifacts/
+      --host 0.0.0.0
+      --port 5000
+    depends_on:
+      - postgres_db
+      - minio-storage
+    networks:
+      - platform_network
+    restart: always
+
+  minio-storage:
+    image: docker.arvancloud.ir/minio/minio:latest
+    container_name: platform_minio
+    ports:
+      - "${MINIO_API_PORT}:9000"
+      - "${MINIO_CONSOLE_PORT}:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    networks:
+      - platform_network
+    command: >
+      server /data --address "0.0.0.0:9000" --console-address "0.0.0.0:9001" & 
+      echo "Waiting for MinIO..." && 
+      sleep 5 && 
+      mc alias set myminio http://localhost:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} && 
+      mc mb --ignore-existing myminio/medical-images && 
+      mc mb --ignore-existing myminio/mlflow-artifacts &&
+      wait
+    restart: always
+
+  backend_api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: platform_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL_INTERNAL}
+      - MINIO_ENDPOINT_URL_INTERNAL=${MINIO_ENDPOINT_URL_INTERNAL}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=us-east-1
+      - RUNNING_IN_DOCKER=true
+      - PYTHONPATH=/workspace
+    depends_on:
+      - postgres_db
+      - minio-storage # 🔴 FIX
+    networks:
+      - platform_network
+    restart: always
+
+networks:
+  platform_network:
+    driver: bridge
+
+volumes:
+  pg_data:
+  minio_data:
