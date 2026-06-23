@@ -64,7 +64,7 @@ async def submit_physician_feedback(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Feedback Loop API: Collects ground-truth audits from pathologists/radiologists,
+    Feedback Loop API (Task 3-2): Collects ground-truth audits from pathologists/radiologists,
     mapping clinical disagreements securely against unique image tracking records.
     """
     # 1. Ensure the underlying inference request transaction actually exists
@@ -78,8 +78,15 @@ async def submit_physician_feedback(
             detail=f"Reference request matching UUID {feedback_data.request_id} not found."
         )
         
+    # 2. Enforce validation constraint: corrected_label is mandatory if physician disagrees
+    if not feedback_data.is_agreed and not feedback_data.corrected_label:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="A 'corrected_label' must be provided when the physician disagrees with the prediction."
+        )
+        
     try:
-        # 2. Instantiating the relational feedback entity mapping to logs_feedback physical table
+        # 3. Instantiating the relational feedback entity mapping to logs_feedback physical table
         feedback_entry = FeedbackLog(
             request_id=feedback_data.request_id,
             is_agreed=feedback_data.is_agreed,
@@ -88,6 +95,7 @@ async def submit_physician_feedback(
         
         db.add(feedback_entry)
         await db.flush() # Buffer to catch unique or foreign constraints violations
+        await db.commit() # Safely commit across postgres database
         
         return {
             "status": "Feedback Logged",
