@@ -5,7 +5,6 @@ FROM python:3.10-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV RUNNING_IN_DOCKER=true
-# 🔴 FIX: Explicitly inject workspace to Python path so absolute imports work natively
 ENV PYTHONPATH=/workspace
 
 # Set the working directory to the project root

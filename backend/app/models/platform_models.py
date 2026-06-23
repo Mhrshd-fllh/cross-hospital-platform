@@ -30,7 +30,12 @@ class InferenceRequest(Base):
     # Relationships
     hospital = relationship("Hospital", back_populates="inference_requests")
     drift_logs = relationship("DriftLog", back_populates="request")
-    feedback_log = relationship("FeedbackLog", back_populates="request", uselist=False)
+    feedback_log = relationship(
+        "FeedbackLog", 
+        back_populates="inference_request", 
+        uselist=False, 
+        cascade="all, delete-orphan"
+    )
 
 class DriftLog(Base):
     __tablename__ = "drift_logs"
