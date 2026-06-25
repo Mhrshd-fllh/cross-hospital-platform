@@ -1,79 +1,43 @@
-import time
-import sys
-from uuid import UUID
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import update
-from backend.app.models.platform_models import InferenceRequest, DriftLog
+import os
+import asyncio
+import mlflow
+from typing import Dict, Any
 
-class ClinicalTelemetryTracker:
+class TelemetryService:
     """
-    Dedicated backend operation tracker to monitor inference latency, 
-    log processing pipeline errors, and handle precise atomic metrics database commits.
+    Production-ready Telemetry service to log live model metrics, 
+    parameters, and inference outputs directly to the MLflow Tracking Server.
     """
     
-    def __init__(self, db_session: AsyncSession, request_id: UUID):
-        self.db = db_session
-        self.request_id = request_id
-        self.start_time = None
+    def __init__(self):
+        # Fetch internal Docker network URI for MLflow or fallback to local
+        self.tracking_uri = os.getenv("MLFLOW_S3_ENDPOINT_URL", "http://mlflow-storage:5000")
+        mlflow.set_tracking_uri(self.tracking_uri)
+        mlflow.set_experiment("Clinical_Inference_Pipeline")
 
-    def start_timing(self):
-        """Starts the high-resolution performance counter."""
-        self.start_time = time.perf_counter()
-
-    def get_current_latency_ms(self) -> int:
-        """Calculates elapsed time in milliseconds since timing started."""
-        if not self.start_time:
-            return 0
-        return int((time.perf_counter() - self.start_time) * 1000)
-
-    async def log_successful_inference(self, prediction: str, uncertainty: float):
+    def _log_to_mlflow(self, run_name: str, params: Dict[str, Any], metrics: Dict[str, Any]):
         """
-        Atomically updates the inference request table with final model outputs 
-        and high-resolution latency.
+        Synchronous worker method executed inside a separate thread pool to avoid blocking ASGI.
         """
-        latency_ms = self.get_current_latency_ms()
+        with mlflow.start_run(run_name=run_name):
+            # Log operational parameters (e.g., S3 paths, compliance flags)
+            mlflow.log_params(params)
+            
+            # Log performance metrics (e.g., pipeline latency, confidence intervals)
+            mlflow.log_metrics(metrics)
+
+    async def log_inference_telemetry(self, request_id: str, params: Dict[str, Any], metrics: Dict[str, Any]):
+        """
+        Non-blocking wrapper leveraging the asyncio event loop executor 
+        to offload blocking MLflow client network operations.
+        """
+        loop = asyncio.get_running_loop()
+        run_name = f"Inference_{str(request_id)[:8]}"
         
-        stmt = (
-            update(InferenceRequest)
-            .where(InferenceRequest.id == self.request_id)
-            .values(
-                prediction_label=prediction,
-                uncertainty_score=uncertainty,
-                latency_ms=latency_ms
-            )
+        await loop.run_in_executor(
+            None, 
+            self._log_to_mlflow, 
+            run_name, 
+            params, 
+            metrics
         )
-        await self.db.execute(stmt)
-        print(f"[Telemetry] Successfully registered request {self.request_id} metrics. Latency: {latency_ms}ms")
-
-    async def log_pipeline_failure(self, error_message: str):
-        """
-        Captures pipeline failure points, logging error markers and current 
-        latency state directly into the relational database.
-        """
-        latency_ms = self.get_current_latency_ms()
-        print(f"[Telemetry CRITICAL] Pipeline failure on {self.request_id}: {error_message}", file=sys.stderr)
-        
-        stmt = (
-            update(InferenceRequest)
-            .where(InferenceRequest.id == self.request_id)
-            .values(
-                prediction_label=f"ERROR: {error_message[:50]}",
-                uncertainty_score=1.0,
-                latency_ms=latency_ms
-            )
-        )
-        await self.db.execute(stmt)
-
-    async def register_drift_metric(self, drift_score: float, status: str):
-        """
-        Directly logs active data drift outputs computed by the platform 
-        into the relational public.drift_logs table.
-        """
-        drift_entry = DriftLog(
-            request_id=self.request_id,
-            drift_score=drift_score,
-            status=status
-        )
-        self.db.add(drift_entry)
-        await self.db.flush()
-        print(f"[Telemetry] Drift metrics persisted for {self.request_id}. Status: {status}")
