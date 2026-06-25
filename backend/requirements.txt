@@ -6,3 +6,4 @@ aiobotocore
 pydantic
 requests
 python-multipart
+mlflow

@@ -9,7 +9,7 @@ class ClinicalPipelineOrchestrator:
     database persistence state updates, and telemetry auditing streams.
     """
     
-    def __init__(self, db_session: AsyncSession, request_id: Any):
+    def __init__(self, db_session: AsyncSession, request_id: any):
         self.db = db_session
         self.request_id = request_id
         # Initialize the telemetry tracker locally from core pack
