@@ -7,3 +7,6 @@ pydantic
 requests
 python-multipart
 mlflow
+alibi-detect==0.11.4
+scikit-image>=0.19.0
+scipy>=1.7.0,<1.11.0

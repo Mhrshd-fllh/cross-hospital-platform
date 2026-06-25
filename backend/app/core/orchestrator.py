@@ -1,7 +1,8 @@
 import time
 from sqlalchemy.ext.asyncio import AsyncSession
 from backend.app.core.telemetry import TelemetryService
-from backend.app.models.platform_models import InferenceRequest
+from backend.app.core.drift_detector import MedicalDriftDetector
+from backend.app.models.platform_models import InferenceRequest, DriftLog
 
 class ClinicalPipelineOrchestrator:
     """
@@ -14,10 +15,14 @@ class ClinicalPipelineOrchestrator:
         self.request_id = request_id
         # Initialize the telemetry tracker locally from core pack
         self.telemetry = TelemetryService()
+        # Initialize Alibi Detect instance
+        self.drift_detector = MedicalDriftDetector()
 
-    async def execute_pipeline(self, image_s3_uri: str, raw_metadata: dict) -> dict:
+    async def execute_pipeline(self,image_bytes: bytes, image_s3_uri: str, raw_metadata: dict) -> dict:
         start_time = time.time()
-        
+        # 1. Run real statistical drift evaluation using Alibi Detect
+        drift_score, drift_status = self.drift_detector.detect_image_drift(image_bytes)
+
         # -------------------------------------------------------------------------
         # [CORE ML RETRIEVAL BLOCK] 
         # Simulated prediction outputs that will eventually link to the weights frozen 
@@ -36,13 +41,33 @@ class ClinicalPipelineOrchestrator:
             "study_modality": raw_metadata.get("study_modality", "UNKNOWN")
         }
         
-        # 2. Extract explicit numeric metrics for drift tracking profiles
+        # 2. Persist Drift Metrics directly into PostgreSQL drift_logs table
+        try:
+            new_drift_log = DriftLog(
+                request_id=self.request_id,
+                drift_score=drift_score,
+                status=drift_status
+            )
+            self.db.add(new_drift_log)
+            # We let the caller commit the main transaction, or flush here safely
+            await self.db.flush()
+        except Exception as db_error:
+            print(f"Postgres drift logging bypassed safely: {str(db_error)}")
+
+        # 3. Stream real Alibi metrics into MLflow Central Tracking Server
+        mlflow_params = {
+            "image_uri": image_s3_uri,
+            "hipaa_sanitized": raw_metadata.get("hipaa_anonymized", False),
+            "study_modality": raw_metadata.get("study_modality", "UNKNOWN"),
+            "drift_status_flag": drift_status
+        }
+        
         mlflow_metrics = {
             "pipeline_latency_ms": float(latency),
-            "model_uncertainty_score": float(uncertainty)
+            "model_uncertainty_score": float(uncertainty),
+            "alibi_drift_score": float(drift_score) # Real Alibi output tracked live
         }
 
-        # 3. Disconnect network blocks: push execution state backgrounded to MLflow server
         try:
             await self.telemetry.log_inference_telemetry(
                 request_id=self.request_id,
@@ -50,7 +75,6 @@ class ClinicalPipelineOrchestrator:
                 metrics=mlflow_metrics
             )
         except Exception as telemetry_error:
-            # Shield core clinical flow from crashing if the tracking channel drops out
             print(f"Telemetry logging bypassed safely: {str(telemetry_error)}")
 
         return {
@@ -58,5 +82,7 @@ class ClinicalPipelineOrchestrator:
             "request_id": str(self.request_id),
             "prediction": predicted_class,
             "uncertainty": uncertainty,
+            "drift_score": drift_score,
+            "drift_status": drift_status,
             "latency_ms": latency
         }
