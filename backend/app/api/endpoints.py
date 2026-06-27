@@ -22,7 +22,7 @@ async def ingest_medical_image(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Ingests PACS medical file, executes HIPAA cleaning, saves data drift parameters, 
+    Ingesting PACS medical file, executes HIPAA cleaning, saves data drift parameters, 
     and logs model telemetry results dynamically with zero mock blocks.
     """
     allowed_extensions = (".dcm", ".nii", ".jpg", ".jpeg", ".zip")
@@ -44,7 +44,12 @@ async def ingest_medical_image(
         
         # 3. Handover transaction lock to production orchestrator
         orchestrator = ClinicalPipelineOrchestrator(db_session=db, request_id=db_record.id)
-        pipeline_result = await orchestrator.execute_pipeline(image_s3_uri=s3_uri, raw_metadata=raw_metadata)
+        
+        pipeline_result = await orchestrator.execute_pipeline(
+            image_bytes=contents, 
+            image_s3_uri=s3_uri, 
+            raw_metadata=raw_metadata
+        )
         
         return pipeline_result
         

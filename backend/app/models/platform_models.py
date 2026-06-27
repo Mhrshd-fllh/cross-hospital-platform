@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from sqlalchemy import String, Integer, Float, Boolean, DateTime, ForeignKey, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from backend.app.core.database import Base
@@ -14,7 +14,8 @@ class Hospital(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"))
 
     # Relationships
-    inference_requests = relationship("InferenceRequest", back_populates="hospital")
+    inference_requests: Mapped[List["InferenceRequest"]] = relationship("InferenceRequest", back_populates="hospital")
+
 
 class InferenceRequest(Base):
     __tablename__ = "inference_requests"
@@ -28,14 +29,17 @@ class InferenceRequest(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"))
 
     # Relationships
-    hospital = relationship("Hospital", back_populates="inference_requests")
-    drift_logs = relationship("DriftLog", back_populates="request")
-    feedback_log = relationship(
+    hospital: Mapped["Hospital"] = relationship("Hospital", back_populates="inference_requests")
+    drift_logs: Mapped[List["DriftLog"]] = relationship("DriftLog", back_populates="request")
+    
+    # Task 3-1: Correctly synced back_populates property key name mapping to FeedbackLog instance
+    feedback_log: Mapped[Optional["FeedbackLog"]] = relationship(
         "FeedbackLog", 
         back_populates="inference_request", 
         uselist=False, 
         cascade="all, delete-orphan"
     )
+
 
 class DriftLog(Base):
     __tablename__ = "drift_logs"
@@ -47,7 +51,8 @@ class DriftLog(Base):
     checked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"))
 
     # Relationships
-    request = relationship("InferenceRequest", back_populates="drift_logs")
+    request: Mapped["InferenceRequest"] = relationship("InferenceRequest", back_populates="drift_logs")
+
 
 class FeedbackLog(Base):
     __tablename__ = "feedback_logs"
@@ -58,5 +63,5 @@ class FeedbackLog(Base):
     corrected_label: Mapped[Optional[str]] = mapped_column(String(100), nullable=True) # Physicians corrective entry
     submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"))
 
-    # Relationships
-    request = relationship("InferenceRequest", back_populates="feedback_log")
+    # Relationships - FIXED: Renamed property tracking parameter to match InferenceRequest registry layout
+    inference_request: Mapped["InferenceRequest"] = relationship("InferenceRequest", back_populates="feedback_log")
