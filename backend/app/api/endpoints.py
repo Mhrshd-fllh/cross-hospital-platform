@@ -45,7 +45,6 @@ async def ingest_medical_image(
         # 3. Handover transaction lock to production orchestrator
         orchestrator = ClinicalPipelineOrchestrator(db_session=db, request_id=db_record.id)
         
-        # 🔴 FIXED: Passed 'contents' as 'image_bytes' to match Alibi Detector requirement
         pipeline_result = await orchestrator.execute_pipeline(
             image_bytes=contents, 
             image_s3_uri=s3_uri, 
