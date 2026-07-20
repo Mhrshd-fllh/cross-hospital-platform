@@ -84,6 +84,8 @@ services:
       - AWS_DEFAULT_REGION=us-east-1
       - RUNNING_IN_DOCKER=true
       - PYTHONPATH=/workspace
+    volumes:
+      - ./baseline:/workspace/baseline
     depends_on:
       - postgres_db
       - minio-storage # 🔴 FIX
