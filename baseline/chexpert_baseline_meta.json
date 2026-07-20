@@ -1,0 +1,18 @@
+{
+  "num_samples": 20,
+  "strata_counts": {
+    "Frontal_normal": 5,
+    "Frontal_abnormal": 5,
+    "Lateral_normal": 5,
+    "Lateral_abnormal": 5
+  },
+  "feature_dimensions": {
+    "histogram": 64,
+    "fft": 8,
+    "lbp": 18,
+    "sharpness": 3,
+    "concat": 93
+  },
+  "chexpert_root": "D:\\term8\\mlops\\project\\cross-hospital-platform\\data\\chexpert-5gb",
+  "seed": 42
+}
