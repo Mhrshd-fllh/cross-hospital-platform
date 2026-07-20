@@ -129,6 +129,46 @@ Note: When running inside Docker containers, the `_INTERNAL` variants of the URL
 - `baseline/`: Stores the drift baseline artifact
 - `data/`: Stores downloaded datasets (CheXpert, MIMIC-CXR)
 
+## Frontend Implementation
+
+A Streamlit-based frontend has been implemented in the `frontend/` directory, providing a complete user interface for the Cross-Hospital Generalization Platform.
+
+### Features
+
+- **Complete Workflow UI**: Upload → Validation → Drift Detection → Style Adaptation → Inference
+- **Model Registry Browser**: View and select from available models (including CheXpert-trained models)
+- **Interactive Visualizations**: Drift analysis charts, feature importance, distribution comparisons
+- **Real-time Monitoring**: System metrics, health checks, and alerting dashboard
+- **Hospital Management**: Facility status, statistics, and activity tracking
+- **Feedback Collection**: Physician feedback interface for model predictions
+- **Settings View**: Read-only system configuration display
+- **Reusable Component Library**: Custom Streamlit components for metrics, charts, tables, upload widgets, etc.
+- **Mock Service Layer**: All backend services are mocked for frontend development, simulating interactions with PostgreSQL, MinIO, and MLflow
+
+### Key Components
+
+- **Pages**: 13 pages covering all aspects of the platform (dashboard, upload, validation, drift, adaptation, models, inference, monitoring, hospitals, logs, alerts, feedback, settings)
+- **Components**: 12 reusable UI components (navbar, sidebar, status badges, metric cards, model cards, charts, tables, timelines, upload widgets, image previews, feedback widgets, alert widgets, drift indicators)
+- **Services**: 12 mock service implementations that mirror the backend service interfaces
+- **Data Models**: Shared Pydantic models for data consistency between frontend and backend
+
+### Technology Stack
+
+- **Framework**: Streamlit for reactive web application
+- **Visualization**: Plotly for interactive charts and graphs
+- **State Management**: Streamlit session state for workflow continuity
+- **Styling**: Custom CSS via Streamlit's markdown capabilities
+
+### Development Status
+
+The frontend is implemented as a separate branch (`feature/frontend`) and consists of 43 Python files organized in a modular structure. All backend interactions are currently simulated through mock services, allowing for independent frontend development and testing.
+
+To run the frontend locally:
+```bash
+streamlit run frontend/app.py
+```
+
+Note: The frontend is designed to work with the backend services. For full functionality, ensure the backend is running and properly configured.
 ## Development
 
 ### Making Changes
