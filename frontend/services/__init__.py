@@ -513,41 +513,74 @@ class StorageService:
 # Factory functions for creating service instances (to be implemented based on actual backend)
 def create_ingestion_service() -> IngestionService:
     """Create an instance of the IngestionService."""
-    # This would return an actual implementation based on configuration
-    raise NotImplementedError("Service implementation not provided")
+    from .ingestion_service import IngestionServiceImpl
+    return IngestionServiceImpl()
 
 def create_validation_service() -> ValidationService:
     """Create an instance of the ValidationService."""
-    raise NotImplementedError("Service implementation not provided")
+    # TODO: Implement real validation service that calls backend API
+    from .validation_service import MockValidationService
+    return MockValidationService()
 
 def create_drift_service() -> DriftService:
     """Create an instance of the DriftService."""
-    raise NotImplementedError("Service implementation not provided")
+    from .drift_service import DriftServiceImpl
+    return DriftServiceImpl()
 
 def create_adaptation_service() -> AdaptationService:
     """Create an instance of the AdaptationService."""
-    raise NotImplementedError("Service implementation not provided")
+    from .adaptation_service import AdaptationServiceImpl
+    return AdaptationServiceImpl()
 
 def create_registry_service() -> RegistryService:
     """Create an instance of the RegistryService."""
-    raise NotImplementedError("Service implementation not provided")
+    # TODO: Implement real registry service that calls backend API
+    from .registry_service import MockRegistryService
+    return MockRegistryService()
 
 def create_inference_service() -> InferenceService:
     """Create an instance of the InferenceService."""
-    raise NotImplementedError("Service implementation not provided")
+    from .inference_service import InferenceServiceImpl
+    return InferenceServiceImpl()
 
 def create_monitoring_service() -> MonitoringService:
     """Create an instance of the MonitoringService."""
-    raise NotImplementedError("Service implementation not provided")
+    # TODO: Implement real monitoring service that calls backend API
+    from .monitoring_service import MockMonitoringService
+    return MockMonitoringService()
 
 def create_feedback_service() -> FeedbackService:
     """Create an instance of the FeedbackService."""
-    raise NotImplementedError("Service implementation not provided")
+    # TODO: Implement real feedback service that calls backend API
+    from .feedback_service import MockFeedbackService
+    return MockFeedbackService()
 
 def create_alert_service() -> AlertService:
     """Create an instance of the AlertService."""
-    raise NotImplementedError("Service implementation not provided")
+    # TODO: Implement real alert service that calls backend API
+    from .alert_service import MockAlertService
+    return MockAlertService()
 
 def create_storage_service() -> StorageService:
     """Create an instance of the StorageService."""
-    raise NotImplementedError("Service implementation not provided")
+    # TODO: Implement real storage service that calls backend API (MinIO/S3)
+    from .storage_service import MockStorageService
+    return MockStorageService()
+
+def create_hospital_service() -> HospitalService:
+    """Create an instance of the HospitalService."""
+    # TODO: Implement real hospital service that calls backend API
+    from .hospital_service import MockHospitalService
+    return MockHospitalService()
+
+def create_logging_service() -> LoggingService:
+    """Create an instance of the LoggingService."""
+    # TODO: Implement real logging service that calls backend API
+    from .logging_service import MockLoggingService
+    return MockLoggingService()
+
+def create_settings_service() -> SettingsService:
+    """Create an instance of the SettingsService."""
+    # TODO: Implement real settings service that calls backend API
+    from .settings_service import MockSettingsService
+    return MockSettingsService()
