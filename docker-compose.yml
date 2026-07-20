@@ -72,7 +72,7 @@ services:
   backend_api:
     build:
       context: .
-      image: mlops_project:latest
+      dockerfile: backend/Dockerfile
     container_name: platform_backend
     ports:
       - "8000:8000"
@@ -84,8 +84,6 @@ services:
       - AWS_DEFAULT_REGION=us-east-1
       - RUNNING_IN_DOCKER=true
       - PYTHONPATH=/workspace
-    volumes:
-      - ./baseline:/workspace/baseline
     depends_on:
       - postgres_db
       - minio-storage # 🔴 FIX
