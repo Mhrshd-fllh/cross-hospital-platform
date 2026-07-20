@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict
 from sqlalchemy import String, Integer, Float, Boolean, DateTime, ForeignKey, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from backend.app.core.database import Base
 
@@ -31,12 +32,12 @@ class InferenceRequest(Base):
     # Relationships
     hospital: Mapped["Hospital"] = relationship("Hospital", back_populates="inference_requests")
     drift_logs: Mapped[List["DriftLog"]] = relationship("DriftLog", back_populates="request")
-    
+
     # Task 3-1: Correctly synced back_populates property key name mapping to FeedbackLog instance
     feedback_log: Mapped[Optional["FeedbackLog"]] = relationship(
-        "FeedbackLog", 
-        back_populates="inference_request", 
-        uselist=False, 
+        "FeedbackLog",
+        back_populates="inference_request",
+        uselist=False,
         cascade="all, delete-orphan"
     )
 
@@ -46,8 +47,13 @@ class DriftLog(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     request_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("inference_requests.id", ondelete="CASCADE"), nullable=False)
+    # Original fields kept for backward compatibility
     drift_score: Mapped[float] = mapped_column(Float, nullable=False)
     status: Mapped[str] = mapped_column(String(50), nullable=False) # e.g., 'Normal', 'Warning', 'Critical'
+    # New fields for detailed drift analysis
+    overall_mmd_stat: Mapped[float] = mapped_column(Float, nullable=False)
+    overall_p_value: Mapped[float] = mapped_column(Float, nullable=False)
+    signal_breakdown: Mapped[dict] = mapped_column(JSONB, nullable=False) # {histogram: p, fft: p, lbp: p, sharpness: p}
     checked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"))
 
     # Relationships
@@ -63,5 +69,19 @@ class FeedbackLog(Base):
     corrected_label: Mapped[Optional[str]] = mapped_column(String(100), nullable=True) # Physicians corrective entry
     submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"))
 
-    # Relationships - FIXED: Renamed property tracking parameter to match InferenceRequest registry layout
+    # Relationships - FIXED: Renamed parameter tracking to match InferenceRequest registry layout
     inference_request: Mapped["InferenceRequest"] = relationship("InferenceRequest", back_populates="feedback_log")
+
+
+class AlertLog(Base):
+    __tablename__ = "alert_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    drift_log_id: Mapped[int] = mapped_column(ForeignKey("drift_logs.id", ondelete="CASCADE"), nullable=False)
+    threshold_used: Mapped[float] = mapped_column(Float, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False)  # e.g., 'Warning', 'Critical'
+    channel: Mapped[str] = mapped_column(String(50), nullable=False)  # e.g., 'slack', 'email'
+    sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"))
+
+    # Relationships
+    drift_log: Mapped["DriftLog"] = relationship("DriftLog")

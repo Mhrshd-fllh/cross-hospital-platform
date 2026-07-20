@@ -6,29 +6,52 @@ CREATE TABLE IF NOT EXISTS hospitals (
 );
 
 CREATE TABLE IF NOT EXISTS inference_requests (
-    id UUID PRIMARY KEY, 
+    id UUID PRIMARY KEY,
     hospital_id INT REFERENCES hospitals(id) ON DELETE RESTRICT,
-    image_s3_uri VARCHAR(512) NOT NULL, 
-    prediction_label VARCHAR(100), 
-    uncertainty_score FLOAT, 
-    latency_ms INT, 
+    image_s3_uri VARCHAR(512) NOT NULL,
+    prediction_label VARCHAR(100),
+    uncertainty_score FLOAT,
+    latency_ms INT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS drift_logs (
     id SERIAL PRIMARY KEY,
     request_id UUID REFERENCES inference_requests(id) ON DELETE CASCADE,
-    drift_score FLOAT NOT NULL, 
-    status VARCHAR(50) NOT NULL, 
+    drift_score FLOAT NOT NULL,
+    status VARCHAR(50) NOT NULL,
     checked_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Add new columns for detailed drift analysis if they do not exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='drift_logs' AND column_name='overall_mmd_stat') THEN
+        ALTER TABLE drift_logs ADD COLUMN overall_mmd_stat FLOAT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='drift_logs' AND column_name='overall_p_value') THEN
+        ALTER TABLE drift_logs ADD COLUMN overall_p_value FLOAT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='drift_logs' AND column_name='signal_breakdown') THEN
+        ALTER TABLE drift_logs ADD COLUMN signal_breakdown JSONB;
+    END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS feedback_logs (
     id SERIAL PRIMARY KEY,
     request_id UUID REFERENCES inference_requests(id) ON DELETE CASCADE UNIQUE,
-    is_agreed BOOLEAN NOT NULL, 
-    corrected_label VARCHAR(100), 
+    is_agreed BOOLEAN NOT NULL,
+    corrected_label VARCHAR(100),
     submitted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS alert_logs (
+    id SERIAL PRIMARY KEY,
+    drift_log_id INTEGER REFERENCES drift_logs(id) ON DELETE CASCADE,
+    threshold_used FLOAT NOT NULL,
+    severity VARCHAR(50) NOT NULL,  -- e.g., 'Warning', 'Critical'
+    channel VARCHAR(50) NOT NULL,   -- e.g., 'slack', 'email'
+    sent_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_requests_hospital ON inference_requests(hospital_id);
