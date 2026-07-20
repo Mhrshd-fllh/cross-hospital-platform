@@ -72,7 +72,7 @@ services:
   backend_api:
     build:
       context: .
-      dockerfile: backend/Dockerfile
+      image: mlops_project:latest
     container_name: platform_backend
     ports:
       - "8000:8000"
