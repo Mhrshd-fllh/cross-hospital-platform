@@ -1,11 +1,12 @@
 # cross-hospital-platform
 
-A cross-hospital platform for medical image ingestion, drift detection, and feedback collection.
+A cross-hospital platform for medical image ingestion, drift detection, style adaptation, and feedback collection.
 
 ## Features
 
 - Medical image ingestion via PACS integration
 - Data drift detection using handcrafted features (histogram, FFT, LBP, sharpness)
+- Style adaptation for cross-hospital generalization (histogram matching, FFT band reweighting, unsharp mask/blur calibration)
 - Real-time alerting on drift detection
 - Feedback loop for physician validation
 - Telemetry logging to MLflow
@@ -59,10 +60,23 @@ This will:
 The script prints progress and a summary of the sample sizes.
 
 ### Configuration
+
 The script can be configured by modifying the following variables in `scripts/build_drift_baseline.py`:
 - `TOTAL_SAMPLES`: Total number of images to sample (default: 2000)
 - `NUM_STRATA`: Number of strata (default: 4 for 2 views x 2 classes)
 - `SEED`: Random seed for reproducibility (default: 42)
+
+### Style Adaptation Configuration
+
+The style adaptation method can be configured via the `ADAPTATION_METHOD` environment variable:
+- `histogram_matching`: Match histogram to reference (default)
+- `adaptive_histogram_equalization`: Apply CLAHE
+- `adaptive_instance_normalization`: Match mean and standard deviation to reference
+
+Set the variable in your `.env` file or environment, e.g.:
+```
+ADAPTATION_METHOD=histogram_matching
+```
 
 ## Running the Tests
 
@@ -74,9 +88,11 @@ pytest
 
 This will run all tests in the `backend/app/core/` and `backend/app/api/` directories.
 
-### Test Coverage
+## Test Coverage
+
 - Feature extraction functions (`test_drift_features.py`)
 - Drift detector (`test_drift_detector.py`)
+- Style adaptation (`test_adaptation_pipeline.py`)
 - API endpoints (`test_endpoints.py`)
 
 ## Environment Variables
@@ -93,6 +109,7 @@ The following environment variables are used by the application:
 | `MLFLOW_S3_ENDPOINT_URL` | `http://minio-storage:9000` | S3 endpoint for MLflow artifact storage |
 | `ALERT_WEBHOOK_URL` | *(unset)* | Webhook URL for drift alerts (e.g., Slack webhook) |
 | `DRIFT_PVALUE_THRESHOLD` | `0.05` | P-value threshold for triggering drift alerts |
+| `ADAPTATION_METHOD` | `histogram_matching` | Style adaptation method (histogram_matching, adaptive_histogram_equalization, adaptive_instance_normalization) |
 | `CANONICAL_RESOLUTION` | `320,320` | Target image resolution for preprocessing |
 | `MIN_DIMENSION` | `64` | Minimum allowed image dimension |
 | `MAX_DIMENSION` | `2048` | Maximum allowed image dimension |
@@ -104,7 +121,7 @@ Note: When running inside Docker containers, the `_INTERNAL` variants of the URL
 - `backend/`: Contains the FastAPI application
   - `app/`: Main application code
     - `api/`: API endpoints
-    - `core`: Core functionality (drift detection, feature extraction, telemetry, alerting, validation)
+    - `core`: Core functionality (drift detection, feature extraction, style adaptation, telemetry, alerting, validation)
     - `crud`: Database operations
     - `models`: Database models
     - `schemas`: Pydantic models for API requests/responses

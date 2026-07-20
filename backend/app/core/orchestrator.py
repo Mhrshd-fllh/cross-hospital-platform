@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.app.core.telemetry import TelemetryService
 from backend.app.core.drift_detector import MedicalDriftDetector
 from backend.app.core.alerting import AlertingService
+from backend.app.core.style_adaptation import StyleAdapter
 from backend.app.models.platform_models import InferenceRequest, DriftLog
 
 class ClinicalPipelineOrchestrator:
@@ -23,6 +24,8 @@ class ClinicalPipelineOrchestrator:
         self.drift_detector = MedicalDriftDetector()
         # Initialize alerting service
         self.alerting = AlertingService()
+        # Initialize style adapter
+        self.style_adapter = StyleAdapter()
 
     async def execute_pipeline(self, image_bytes: bytes, image_s3_uri: str, raw_metadata: dict) -> dict:
         start_time = time.time()
@@ -42,6 +45,16 @@ class ClinicalPipelineOrchestrator:
             'sharpness': float('nan')
         })
         status = drift_result.get('status', 'Error')
+
+        # 2. Apply style adaptation (after drift detection, before inference)
+        try:
+            adapted_image_bytes = self.style_adapter.adapt_image(
+                image_bytes, metadata={**raw_metadata, "drift_result": drift_result}
+            )
+        except Exception as adapt_error:
+            # If adaptation fails, log and fall back to original image
+            print(f"Style adaptation failed: {adapt_error}. Using original image.")
+            adapted_image_bytes = image_bytes
 
         # -------------------------------------------------------------------------
         # [CORE ML RETRIEVAL BLOCK]
