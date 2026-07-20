@@ -1,5 +1,5 @@
 # Use a lightweight official Python runtime as a parent image
-FROM python:3.10-slim
+FROM docker.arvancloud.ir/python:3.10-slim
 
 # Set system environment variables
 ENV PYTHONDONTWRITEBYTECODE=1

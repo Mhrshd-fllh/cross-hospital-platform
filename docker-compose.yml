@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   postgres_db:
-    image: postgres:15-alpine
+    image: docker.arvancloud.ir/library/postgres:15-alpine
     container_name: platform_postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -18,7 +18,7 @@ services:
     restart: always
 
   mlflow_server:
-    image: docker.devneeds.ir/mlflow/mlflow:latest
+    image: ghcr.io/mlflow/mlflow:latest
     container_name: platform_mlflow
     ports:
       - "${MLFLOW_TRACKING_PORT}:5000"
