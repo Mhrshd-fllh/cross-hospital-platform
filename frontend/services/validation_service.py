@@ -1,119 +1,79 @@
 """
-Mock implementation of the ValidationService for development and testing.
-Returns simulated data for frontend development.
+Real implementation of the ValidationService that communicates with the backend API.
 """
-
-import random
-from datetime import datetime, timedelta
-from typing import List
+import streamlit as st
+from datetime import datetime
+from typing import Optional
 from . import ValidationService, ValidationResult
+from utils.api.client import get_api_client
 
-class MockValidationService(ValidationService):
-    """Mock implementation of ValidationService."""
+class ValidationServiceImpl(ValidationService):
+    """Real implementation of ValidationService that calls backend API."""
 
-    def __init__(self):
-        self._validation_results: dict = {}  # request_id -> ValidationResult
+    def _get_client(self):
+        """Get API client with auth token from session state."""
+        client = get_api_client()
+        token = getattr(st.session_state, "token", None) if hasattr(st, "session_state") else None
+        if token:
+            client.set_auth_token(token)
+        return client
 
-    def validate_image(self, request_id: str) -> ValidationResult:
-        """Simulate validating an image."""
-        # Generate mock validation checks
-        checks = [
-            {
-                "check": "File Format",
-                "description": "Verify file is a valid DICOM, JPG, or PNG image",
-                "pass": True,
-                "details": "File format: DICOM",
-                "severity": "error"
-            },
-            {
-                "check": "Image Dimensions",
-                "description": "Check image dimensions are within expected range (256x256 to 4096x4096)",
-                "pass": True,
-                "details": "Dimensions: 1024x1024 pixels",
-                "severity": "error"
-            },
-            {
-                "check": "Pixel Data Integrity",
-                "description": "Verify pixel data is not corrupted or missing",
-                "pass": True,
-                "details": "All pixel values present and within valid range",
-                "severity": "error"
-            },
-            {
-                "check": "Modality Tag",
-                "description": "Verify DICOM Modality tag is present and valid",
-                "pass": True,
-                "details": "Modality: DX (Digital Radiography)",
-                "severity": "error"
-            },
-            {
-                "check": "Patient ID Present",
-                "description": "Ensure Patient ID is present in metadata",
-                "pass": True,
-                "details": "Patient ID: MRN123456",
-                "severity": "error"
-            },
-            {
-                "check": "Study Date Valid",
-                "description": "Verify study date is present and reasonable",
-                "pass": True,
-                "details": "Study Date: 2024-01-15",
-                "severity": "error"
-            },
-            {
-                "check": "Body Part Examined",
-                "description": "Check body part is specified and matches image type",
-                "pass": random.choice([True, False]),  # Sometimes fail for demo
-                "details": "Body Part Examined: CHEST",
-                "severity": "warning"
-            },
-            {
-                "check": "Image Orientation",
-                "description": "Verify image orientation tags are present",
-                "pass": random.choice([True, False]),
-                "details": "Patient Orientation: Missing (using default)",
-                "severity": "warning"
-            },
-            {
-                "check": "Pixel Spacing",
-                "description": "Check pixel spacing values are present and reasonable",
-                "pass": True,
-                "details": "Pixel Spacing: 0.15x0.15 mm/pixel",
-                "severity": "warning"
-            }
-        ]
+    def _map_to_validation_result(self, data: dict, request_id: str) -> ValidationResult:
+        """Convert API response to ValidationResult dataclass."""
+        # Extract validation checklist from response
+        checklist = data.get("validation_checklist", {})
+        # Convert checklist dict to list of check dicts as expected by ValidationResult
+        checks = []
+        for check_name, passed in checklist.items():
+            checks.append({
+                "check": check_name.replace("_", " ").title(),
+                "description": f"Validation check for {check_name}",
+                "pass": bool(passed),
+                "details": f"{check_name}: {'PASS' if passed else 'FAIL'}",
+                "severity": "error" if not passed else "success"
+            })
 
-        # Determine overall status
-        failed_checks = [c for c in checks if not c["pass"]]
-        critical_failures = [c for c in failed_checks if c["severity"] == "error"]
+        # Determine overall passed status
+        passed = all(check["pass"] for check in checks) if checks else False
 
-        if len(critical_failures) > 0:
-            overall_status = "FAIL"
-        elif len(failed_checks) > 0:
-            overall_status = "WARNING"
-        else:
-            overall_status = "PASS"
-
-        result = ValidationResult(
+        return ValidationResult(
             request_id=request_id,
-            passed=(overall_status == "PASS"),
+            passed=passed,
             checks=checks,
             timestamp=datetime.now()
         )
 
-        # Store for retrieval
-        self._validation_results[request_id] = result
-        return result
+    def validate_image(self, request_id: str) -> ValidationResult:
+        """
+        Validate an uploaded image and its metadata by retrieving validation results.
+
+        Args:
+            request_id: ID of the request to validate
+
+        Returns:
+            ValidationResult: Validation results
+        """
+        # In this implementation, validation results are retrieved via GET endpoint
+        return self.get_validation_result(request_id)
 
     def get_validation_result(self, request_id: str) -> ValidationResult:
-        """Get validation result for a request."""
-        if request_id in self._validation_results:
-            return self._validation_results[request_id]
-        else:
-            # Generate on demand if not cached
-            return self.validate_image(request_id)
+        """
+        Get validation result for a request from the backend API.
 
-# Factory function
-def create_validation_service() -> ValidationService:
-    """Create an instance of the mock ValidationService."""
-    return MockValidationService()
+        Args:
+            request_id: ID of the request
+
+        Returns:
+            ValidationResult: Validation results
+        """
+        client = self._get_client()
+        try:
+            response = client.session.get(
+                f"{client.base_url}/validation/{request_id}"
+            )
+            # Handle response using client's error handling
+            data = client._handle_response(response)
+            return self._map_to_validation_result(data, request_id)
+        except Exception as e:
+            # Raise a more informative error
+            raise Exception(f"Failed to fetch validation result for request {request_id}: {str(e)}")
