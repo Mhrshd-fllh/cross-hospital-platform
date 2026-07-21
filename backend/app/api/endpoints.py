@@ -187,7 +187,7 @@ async def list_models():
     """
     try:
         # Set MLflow tracking URI from environment
-        tracking_uri = os.getenv("MLFLOW_S3_ENDPOINT_URL", "http://mlflow_server:5000")
+        tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://mlflow_server:5000")
         mlflow.set_tracking_uri(tracking_uri)
         client = MlflowClient()
 
@@ -225,7 +225,7 @@ async def get_model_version(name: str, version: str):
     Get details of a specific model version from MLflow.
     """
     try:
-        tracking_uri = os.getenv("MLFLOW_S3_ENDPOINT_URL", "http://mlflow_server:5000")
+        tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://mlflow_server:5000")
         mlflow.set_tracking_uri(tracking_uri)
         client = MlflowClient()
 
@@ -270,11 +270,11 @@ async def get_settings():
             "debug": os.getenv("DEBUG", "false").lower() == "true"
         },
         "database": {
-            "url": os.getenv("DATABASE_URL", "postgresql+asyncpg://user:password@localhost/dbname"),
+            "url": os.getenv("DATABASE_URL"),
             "echo": os.getenv("DB_ECHO", "false").lower() == "true"
         },
         "mlflow": {
-            "tracking_uri": os.getenv("MLFLOW_S3_ENDPOINT_URL", "http://mlflow_server:5000"),
+            "tracking_uri": os.getenv("MLFLOW_TRACKING_URI", "http://mlflow_server:5000"),
             "experiment_name": os.getenv("MLFLOW_EXPERIMENT_NAME", "Clinical_Inference_Pipeline")
         },
         "minio": {

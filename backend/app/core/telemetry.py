@@ -11,7 +11,7 @@ class TelemetryService:
     
     def __init__(self):
         # Fetch internal Docker network URI for MLflow or fallback to local
-        self.tracking_uri = os.getenv("MLFLOW_S3_ENDPOINT_URL", "http://mlflow_server:5000")
+        self.tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://mlflow_server:5000")
         mlflow.set_tracking_uri(self.tracking_uri)
         mlflow.set_experiment("Clinical_Inference_Pipeline")
 
