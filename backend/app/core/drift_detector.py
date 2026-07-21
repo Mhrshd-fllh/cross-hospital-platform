@@ -141,18 +141,12 @@ class MedicalDriftDetector:
             # feature in that group is significant, but for the overall status we
             # follow the original spec: use the overall MMD p‑value and the derived
             # drift_score (1 - pvalue) with the same thresholds.
-            is_drifted = mmd_pvalue < 0.05
-            drift_score = 1.0 - mmd_pvalue
-            # Clip to [0, 1] just in case
-            drift_score = max(0.0, min(1.0, drift_score))
-
-            if is_drifted:
-                if drift_score >= 0.85:
-                    status = "Critical"
-                else:
-                    status = "Warning"
-            else:
+            if mmd_pvalue >= 0.05:
                 status = "Normal"
+            elif mmd_pvalue >= 0.01:  # 0.01 <= pvalue < 0.05
+                status = "Warning"
+            else:  # pvalue < 0.01
+                status = "Critical"
 
             return {
                 'mmd_stat': mmd_stat,

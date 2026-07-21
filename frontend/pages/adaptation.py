@@ -94,47 +94,49 @@ def render_adaptation_metrics(adaptation_result):
 
     col1, col2, col3, col4 = st.columns(4)
 
-    with col-by-pixel absolute difference between
-    original and adapted images. Brighter areas indicate larger changes made
-    during the style adaptation process.*
-    """)
+    with col1:
+        psnr = metrics["peak_signal_to_noise_ratio"]
+        # Higher PSNR is better
+        psnr_color = "green" if psnr > 30 else "orange" if psnr > 25 else "red"
+        st.metric(
+            label="PSNR",
+            value=f"{psnr:.1f} dB",
+            help="Peak Signal-to-Noise Ratio (higher = better quality)"
+        )
+        st.markdown(f"<small style='color: {psnr_color}'>●</small>", unsafe_allow_html=True)
 
-def render_adaptation_metrics(adaptation_result):
-    """Render adaptation quality metrics"""
-    st.subheader("Adaptation Quality Metrics")
+    with col2:
+        ssim = metrics["structural_similarity_index"]
+        # Higher SSIM is better
+        ssim_color = "green" if ssim > 0.9 else "orange" if ssim > 0.8 else "red"
+        st.metric(
+            label="SSIM",
+            value=f"{ssim:.3f}",
+            help="Structural Similarity Index (higher = better similarity)"
+        )
+        st.markdown(f"<small style='color: {ssim_color}'>●</small>", unsafe_allow_html=True)
 
-    metrics = adaptation_result.quality_metrics
+    with col3:
+        mse = metrics["mean_squared_error"]
+        # Lower MSE is better
+        mse_color = "green" if mse < 0.005 else "orange" if mse < 0.01 else "red"
+        st.metric(
+            label="MSE",
+            value=f"{mse:.4f}",
+            help="Mean Squared Error (lower = better)"
+        )
+        st.markdown(f"<small style='color: {mse_color}'>●</small>", unsafe_allow_html=True)
 
-    col1, col2, 1)
-            if psnr > 30 else "orange" if psnr > 25 else "red"
-            st.metric(
-                label="PSNR",
-                value=f"{psnr:.1f} dB",
-                help="Peak Signal-to-Noise Ratio (higher = better quality)"
-            )
-            st.markdown(f"<small style='color: {psnr_color}'>●</small>", unsafe_allow_html=True)
-
-        with col3:
-            mse = metrics["mean_squared_error"]
-            # Lower MSE is better
-            mse_color = "green" if mse < 0.005 else "orange" if mse < 0.01 else "red"
-            st.metric(
-                label="MSE",
-                value=f"{mse:.4f}",
-                help="Mean Squared Error (lower = better)"
-            )
-            st.markdown(f"<small style='color: {mse_color}'>●</small>", unsafe_allow_html=True)
-
-        with col4:
-            aps = metrics["anatomical_preservation_score"]
-            # Custom metric - should be high
-            aps_color = "green" if aps > 0.95 else "orange" if aps > 0.9 else "red"
-            st.metric(
-                label="Anatomy Preservation",
-                value=f"{aps:.3f}",
-                help="Custom score measuring anatomical feature preservation"
-            )
-            st.markdown(f"<small style='color: {aps_color}'>●</small>", unsafe_allow_html=True)
+    with col4:
+        aps = metrics["anatomical_preservation_score"]
+        # Custom metric - should be high
+        aps_color = "green" if aps > 0.95 else "orange" if aps > 0.9 else "red"
+        st.metric(
+            label="Anatomy Preservation",
+            value=f"{aps:.3f}",
+            help="Custom score measuring anatomical feature preservation"
+        )
+        st.markdown(f"<small style='color: {aps_color}'>●</small>", unsafe_allow_html=True)
 
 def render_adaptation_timeline(adaptation_result):
     """Render adaptation process timeline"""

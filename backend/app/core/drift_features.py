@@ -42,20 +42,17 @@ def load_and_preprocess(image_bytes: bytes, target_size: tuple[int, int] = (320,
     # Resize
     img_resized = img.resize(target_size, Image.Resampling.BILINEAR)
     # Convert to numpy array and normalize to [0, 1]
-    img_array = np.array(img_resized, dtype=np.float32) / 255.0
+    img_array = np.clip(np.array(img_resized, dtype=np.float32) / 255.0, 0.0, 1.0)
     return img_array
 
 
 def _validate_image(image: np.ndarray) -> None:
-    """Validate that the input is a 2D grayscale float32 array in [0, 1]."""
+    """Validate that the input is a 2D grayscale float32 array."""
     if image.ndim != 2:
         raise ValueError(f"Expected 2D grayscale image, got shape {image.shape}")
     if not np.issubdtype(image.dtype, np.floating):
         raise ValueError(f"Expected floating point image, got dtype {image.dtype}")
-    # Optional: check range; we warn but continue
-    if np.min(image) < 0.0 or np.max(image) > 1.0:
-        # Values outside [0,1] are still acceptable for feature extraction
-        pass
+    # Note: image values are expected to be in [0, 1] due to preprocessing in load_and_preprocess.
 
 
 def extract_histogram_features(image: np.ndarray, bins: int = 64) -> np.ndarray:

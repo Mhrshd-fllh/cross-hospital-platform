@@ -90,13 +90,6 @@ class ClinicalPipelineOrchestrator:
         # Calculate real engine latency down to milliseconds
         latency = int((time.time() - start_time) * 1000)
 
-        # 1. Prepare tracking payload and configurations for MLflow
-        mlflow_params = {
-            "image_uri": image_s3_uri,
-            "hipaa_sanitized": raw_metadata.get("hipaa_anonymized", False),
-            "study_modality": raw_metadata.get("study_modality", "UNKNOWN")
-        }
-
         # 2. Persist Drift Metrics directly into PostgreSQL drift_logs table
         try:
             # Compute drift_score for backward compatibility (1 - pvalue, clamped)

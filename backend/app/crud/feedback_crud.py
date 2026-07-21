@@ -2,10 +2,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from uuid import UUID
 from backend.app.models.platform_models import FeedbackLog, InferenceRequest
-from backend.app.schemas.feedback import FeedbackCreate
+from backend.app.schema.feedback_schemas import FeedbackSubmitSchema
 from fastapi import HTTPException, status
 
-async def submit_feedback_log(db: AsyncSession, feedback_data: FeedbackCreate) -> FeedbackLog:
+async def submit_feedback_log(db: AsyncSession, feedback_data: FeedbackSubmitSchema) -> FeedbackLog:
     """
     Submits and persists a physician's feedback (Ground Truth validation) for a specific inference request.
     Enforces referential integrity by checking the existence of the source UUID.
