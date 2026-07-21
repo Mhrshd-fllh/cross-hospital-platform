@@ -17,3 +17,5 @@ psutil>=5.9.0
 pytest
 pytest-asyncio
 httpx
+plotly
+streamlit
