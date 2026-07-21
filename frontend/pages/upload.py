@@ -235,7 +235,7 @@ def render_request_summary(request_id, metadata):
             else:  # Remaining stages are pending
                 st.warning(f"⏳ {stage}")
 
-def upload_page():
+def render_upload():
     """Main upload page function"""
     # Header
     st.header("📤 Upload New Request")

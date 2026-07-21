@@ -131,7 +131,6 @@ class MockMonitoringService(MonitoringService):
         self._metrics_history.append(metrics)
         # Keep only last 1000 entries
         if len(self._metrics_history) > 1000:
-        if len(self._metrics_history) > 1000:
             self._metrics_history = self._metrics_history[-1000:]
 
     def _get_empty_metrics(self) -> MonitoringMetrics:

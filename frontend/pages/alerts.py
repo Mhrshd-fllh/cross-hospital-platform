@@ -146,7 +146,7 @@ def render_alert_details(alert):
     if alert.acknowledged:
         # Simulate acknowledgment time (some time after generation)
         ack_time = alert.timestamp + timedelta(minutes=30)  # Placeholder
-        timeline_data.append({"timestamp": ack_time.strftime("%Y-%m-%d %H:%M:%S"), "event": f"Acknowledged by {getattr(alert, 'acknowledged_by', 'Unknown'))"})
+        timeline_data.append({"timestamp": ack_time.strftime("%Y-%m-%d %H:%M:%S"), "event": f"Acknowledged by {getattr(alert, 'acknowledged_by', 'Unknown')}"})
 
     if alert.resolved:
         # Simulate resolution time (some time after acknowledgment)

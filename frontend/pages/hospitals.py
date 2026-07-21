@@ -196,7 +196,7 @@ def hospitals_page():
 
         # Summary metrics
         col1, col2, col3, col4 = st.columns(4)
-        with col1):
+        with col1:
             st.metric("Total Hospitals", len(hospitals))
         with col2:
             online_count = sum(1 for h in hospitals if h.status.lower() == "online")
