@@ -510,6 +510,156 @@ class StorageService:
         """
         raise NotImplementedError
 
+
+class HospitalService:
+    """Service for managing hospital information."""
+
+    def get_hospitals(self) -> List[HospitalInfo]:
+        """
+        Get all hospitals.
+
+        Returns:
+            List of HospitalInfo objects
+        """
+        raise NotImplementedError
+
+    def get_hospital(self, hospital_id: str) -> Optional[HospitalInfo]:
+        """
+        Get a specific hospital by ID.
+
+        Args:
+            hospital_id: ID of the hospital
+
+        Returns:
+            HospitalInfo object if found, None otherwise
+        """
+        raise NotImplementedError
+
+    def get_hospitals_by_status(self, status: str) -> List[HospitalInfo]:
+        """
+        Get hospitals by status.
+
+        Args:
+            status: Hospital status to filter by
+
+        Returns:
+            List of HospitalInfo objects with matching status
+        """
+        raise NotImplementedError
+
+    def update_hospital_status(self, hospital_id: str, status: str) -> bool:
+        """
+        Update hospital status.
+
+        Args:
+            hospital_id: ID of the hospital to update
+            status: New status value
+
+        Returns:
+            True if successful, False otherwise
+        """
+        raise NotImplementedError
+
+
+class LoggingService:
+    """Service for collecting and managing system logs."""
+
+    def get_logs(self, limit: int = 100) -> List[LogEntry]:
+        """
+        Get recent logs.
+
+        Args:
+            limit: Maximum number of log entries to return
+
+        Returns:
+            List of LogEntry objects
+        """
+        raise NotImplementedError
+
+    def get_log_by_id(self, request_id: str) -> Optional[LogEntry]:
+        """
+        Get a specific log entry by request ID.
+
+        Args:
+            request_id: ID of the request to retrieve logs for
+
+        Returns:
+            LogEntry object if found, None otherwise
+        """
+        raise NotImplementedError
+
+    def get_logs_by_hospital(self, hospital: str, limit: int = 100) -> List[LogEntry]:
+        """
+        Get logs for a specific hospital.
+
+        Args:
+            hospital: Hospital name to filter by
+            limit: Maximum number of log entries to return
+
+        Returns:
+            List of LogEntry objects for the specified hospital
+        """
+        raise NotImplementedError
+
+    def get_logs_by_status(self, status: str, limit: int = 100) -> List[LogEntry]:
+        """
+        Get logs by status.
+
+        Args:
+            status: Log status to filter by (e.g., 'completed', 'failed', 'processing')
+            limit: Maximum number of log entries to return
+
+        Returns:
+            List of LogEntry objects with the specified status
+        """
+        raise NotImplementedError
+
+
+class SettingsService:
+    """Service for managing system settings and configuration."""
+
+    def get_settings(self) -> Dict[str, Any]:
+        """
+        Get all system settings.
+
+        Returns:
+            Returns:
+                Dictionary containing all system settings
+        """
+        raise NotImplementedError
+
+    def get_setting(self, section: str, key: str) -> Any:
+        """
+        Get a specific setting value.
+
+        Args:
+            section: Settings section (e.g., 'system', 'database', 'processing')
+            key: Specific setting key within the section
+
+        Returns:
+            Setting value if found, None otherwise
+        """
+        raise NotImplementedError
+
+    def is_feature_enabled(self, feature: str) -> bool:
+        """
+        Check if a feature is enabled.
+
+        Args:
+            feature: Feature name to check (e.g., 'alerting', 'gpu_acceleration')
+
+        Returns:
+            True if feature is enabled, False otherwise
+        """
+        raise NotImplementedError
+
+
+@dataclass
+class SystemHealth:
+    """System health status."""
+    status: str = "healthy"
+
+
 # Factory functions for creating service instances (to be implemented based on actual backend)
 def create_ingestion_service() -> IngestionService:
     """Create an instance of the IngestionService."""

@@ -54,15 +54,6 @@ def get_mock_monitoring_data():
     # Simulate distribution over time
     prediction_distribution = {}
     for cls in prediction_classes:
-        # Base distribution with some variation over time
-        base_rate = {"Normal": 0.5, "Pneumonia": 0.2, "Cardiomegaly": 0.15, "Edema": 0.1, "Other": 0.05}[cls]
-        variation = [random.uniform(-0.1, 0.1) for _ in range(hours)]
-        rates = [max(0, min(1, base_rate + v)) for v in variation]
-        # Normalize to sum to 1.0 for each time point
-        for h in range(hours):
-            total = sum([prediction_distribution.get(c, [0]*h)[h] for c in prediction_classes[:h]] + [sum([rates[h] for rates in [ [max(0, min(1, {"Normal": 0.5, "Pneumonia": 0.2, "Cardiomegaly": 0.15, "Edema": 0.1, "Other": 0.05}[c] + random.uniform(-0.1, 0.1)) for c in prediction_classes])]))])
-            # Simplified normalization - just use the rates as proportions
-            pass
         # Simpler approach: generate realistic distributions for each time point
         prediction_distribution[cls] = []
         for h in range(hours):

@@ -319,7 +319,7 @@ def feedback_page():
                     if correct_diagnosis == "Other":
                         custom_diagnosis = st.text_input("Please specify the correct diagnosis:")
                         if custom_diagnosis:
-                            correct_diagnosis = custom_diagnelse:
+                            correct_diagnosis = custom_diagnosis
                         comments = st.text_area(
                             "Comments (optional):",
                             placeholder="Please provide any additional observations or concerns..."

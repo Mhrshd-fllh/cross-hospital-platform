@@ -298,11 +298,11 @@ def render_dashboard():
                 column_config={
                     "Status": st.column_config.TextColumn(
                         "Status",
-                        help": Request processing status"
+                        help="Request processing status"
                     ),
                     "Drift Score": st.column_config.NumberColumn(
                         "Drift Score",
-                        help": Domain drift score",
+                        help="Domain drift score",
                         format="%.3f"
                     )
                 }
@@ -333,11 +333,11 @@ def render_dashboard():
                 column_config={
                     "Severity": st.column_config.TextColumn(
                         "Severity",
-                        help": Alert severity level"
+                        help="Alert severity level"
                     ),
                     "Drift Score": st.column_config.NumberColumn(
                         "Drift Score",
-                        help": Associated drift score",
+                        help="Associated drift score",
                         format="%.3f"
                     )
                 }

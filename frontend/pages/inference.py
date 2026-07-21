@@ -267,7 +267,7 @@ def render_inference_details(inference_result):
         column_config={
             "Time (s)": st.column_config.NumberColumn(
                 "Time (s)",
-                help": Processing time for each stage",
+                help="Processing time for each stage",
                 format="%.2f"
             )
         }

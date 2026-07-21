@@ -188,11 +188,11 @@ def render_models_table(models):
         column_config={
             "Frozen": st.column_config.TextColumn(
                 "Frozen",
-                help": Whether the model is frozen (immutable)"
+                help="Whether the model is frozen (immutable)"
             ),
             "AUC": st.column_config.NumberColumn(
                 "AUC",
-                help": Area Under the ROC Curve",
+                help="Area Under the ROC Curve",
                 format="%.3f"
             )
         }

@@ -45,16 +45,17 @@ def render_validation_check(check):
 
         with col3:
             if check["pass"]:
-                st.markdown(f"<span style='color: green; font-weight: bold;'>{status}</span>", unsafe_allow_html=True}")
+                st.markdown(f"<span style='color: green; font-weight: bold;'>{status}</span>", unsafe_allow_html=True)
             else:
                 # Color based on severity
-                color = "red" if check["severity"] == "error" else "orange"
-                st.markdown(f"Details: {check['check']}"):
-                    st.write(check["details"])
-                    if not check["pass"] and check["severity"] == "error":
-                        st.error("This is a critical validation failure that will block processing.")
-                    elif not check["pass"] and check["severity"] == "warning":
-                        st.warning("This is a warning that may affect processing quality.")
+                if check["severity"] == "error":
+                    st.error(f"Details: {check['details']}")
+                    st.error("This is a critical validation failure that will block processing.")
+                elif check["severity"] == "warning":
+                    st.warning(f"Details: {check['details']}")
+                    st.warning("This is a warning that may affect processing quality.")
+                else:
+                    st.info(f"Details: {check['details']}")
 
         st.markdown("---")
 
@@ -140,16 +141,16 @@ def render_expanded_report(validation_result):
             column_config={
                 "Status": st.column_config.TextColumn(
                     "Status",
-                    help": Validation pass/fail status"
+                    help="Validation pass/fail status"
                 ),
                 "Severity": st.column_config.TextColumn(
                     "Severity",
-                    help": Issue severity level"
+                    help="Issue severity level"
                 )
             }
         )
 
-def validation_page():
+def render_validation():
     """Main validation page function"""
     # Header
     st.header("🔍 Validation Results")
