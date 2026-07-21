@@ -32,7 +32,7 @@ services:
     volumes:
       - ./deployment/mlflow/artifacts:/mlflow/artifacts
     command: >
-      mlflow server 
+      mlflow server
       --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}
       --default-artifact-root s3://mlflow-artifacts/
       --host 0.0.0.0
@@ -60,12 +60,12 @@ services:
     networks:
       - platform_network
     command: >
-      server /data --address "0.0.0.0:9000" --console-address "0.0.0.0:9001" & 
-      echo "Waiting for MinIO..." && 
-      sleep 5 && 
-      mc alias set myminio http://localhost:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} && 
-      mc mb --ignore-existing myminio/medical-images && 
-      mc mb --ignore-existing myminio/mlflow-artifacts &&
+      server /data --address "0.0.0.0:9000" --console-address "0.0.0.0:9001" &
+      echo "Waiting for MinIO..." &&
+      sleep 5 &&
+      mc alias set myminio http://localhost:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} &&
+      mb --ignore-existing myminio/medical-images &&
+      mb --ignore-existing myminio/mlflow-artifacts &&
       wait
     restart: always
 
@@ -84,12 +84,20 @@ services:
       - AWS_DEFAULT_REGION=us-east-1
       - RUNNING_IN_DOCKER=true
       - PYTHONPATH=/workspace
+      - MLFLOW_MODEL_URI=${MLFLOW_MODEL_URI}
+    volumes:
+      - ./baseline:/workspace/baseline:ro
     depends_on:
       - postgres_db
       - minio-storage # 🔴 FIX
     networks:
       - platform_network
     restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 networks:
   platform_network:
