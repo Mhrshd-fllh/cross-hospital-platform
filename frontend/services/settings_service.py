@@ -1,20 +1,112 @@
 """
-Mock implementation of the SettingsService for development and testing.
-Returns simulated data for frontend development.
+Real implementation of the SettingsService that communicates with the backend API.
 """
 
-from datetime import datetime
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from . import SettingsService
+from utils.api.client import get_api_client
+import streamlit as st
 
-class MockSettingsService(SettingsService):
-    """Mock implementation of SettingsService."""
+
+class SettingsServiceImpl(SettingsService):
+    """Real implementation of SettingsService that calls backend API."""
 
     def __init__(self):
-        self._settings = self._generate_mock_settings()
+        self.api_client = get_api_client()
+        # Set auth token from session state if available
+        token = st.session_state.get("access_token")
+        if token:
+            self.api_client.set_auth_token(token)
 
-    def _generate_mock_settings(self) -> Dict[str, Any]:
-        """Generate mock settings data."""
+    def _ensure_auth_token(self):
+        """Ensure the API client has the current auth token from session state."""
+        token = st.session_state.get("access_token")
+        if token:
+            self.api_client.set_auth_token(token)
+
+    def get_settings(self) -> Dict[str, Any]:
+        """
+        Get all system settings from the backend API.
+
+        Returns:
+            Dictionary containing all system settings
+        """
+        self._ensure_auth_token()
+        try:
+            response = self.api_client.session.get(
+                f"{self.api_client.base_url}/settings"
+            )
+            response.raise_for_status()
+            settings_data = response.json()
+            return settings_data
+        except Exception as e:
+            # Fallback to mock data in case of error for development
+            st.warning(f"Failed to fetch settings from API: {str(e)}. Using mock data.")
+            return self._get_mock_settings()
+
+    def get_setting(self, section: str, key: str) -> Any:
+        """
+        Get a specific setting value from the backend API.
+
+        Args:
+            section: Settings section (e.g., 'system', 'database', 'processing')
+            key: Specific setting key within the section
+
+        Returns:
+            Setting value if found, None otherwise
+        """
+        # Get all settings and extract the specific value
+        # In a more optimized implementation, we might have a dedicated endpoint
+        settings = self.get_settings()
+        if section in settings and key in settings[section]:
+            return settings[section][key]
+        return None
+
+    def is_feature_enabled(self, feature: str) -> bool:
+        """
+        Check if a feature is enabled based on settings.
+
+        Args:
+            feature: Feature name to check (e.g., 'alerting', 'gpu_acceleration')
+
+        Returns:
+            True if feature is enabled, False otherwise
+        """
+        # Map feature names to their corresponding settings paths
+        feature_map = {
+            "alerting": ("alerting", "enabled"),
+            "gpu_acceleration": ("processing", "inference", "gpu_enabled"),
+            "audit_logging": ("security", "audit_logging"),
+            "anonymization": ("privacy", "enabled"),  # Assuming this might exist
+            "ssl_enforced": ("database", "ssl_mode"),  # Special handling
+            "versioning": ("storage", "buckets", "medical-images", "versioning")  # Example path
+        }
+
+        if feature in feature_map:
+            path = feature_map[feature]
+            # Navigate through the nested dictionary
+            value = None
+            try:
+                settings = self.get_settings()
+                current = settings
+                for key in path:
+                    if isinstance(current, dict) and key in current:
+                        current = current[key]
+                    else:
+                        return False  # Path doesn't exist
+                # Handle special cases
+                if feature == "ssl_enforced":
+                    # SSL is enabled if mode is not 'disable'
+                    return isinstance(value, str) and value.lower() != "disable"
+                else:
+                    return bool(value)
+            except:
+                return False
+        return False
+
+    # Helper methods for development/fallback
+    def _get_mock_settings(self) -> Dict[str, Any]:
+        """Return mock settings for development when API is unavailable."""
         return {
             "system": {
                 "name": "Cross-Hospital Generalization Platform",
@@ -109,30 +201,7 @@ class MockSettingsService(SettingsService):
             }
         }
 
-    def get_settings(self) -> Dict[str, Any]:
-        """Get all system settings."""
-        return self._settings.copy()
-
-    def get_setting(self, section: str, key: str) -> Any:
-        """Get a specific setting value."""
-        if section in self._settings and key in self._settings[section]:
-            return self._settings[section][key]
-        return None
-
-    def is_feature_enabled(self, feature: str) -> bool:
-        """Check if a feature is enabled."""
-        feature_map = {
-            "alerting": lambda: self._settings["alerting"]["enabled"],
-            "gpu_acceleration": lambda: self._settings["processing"]["inference"]["gpu_enabled"],
-            "audit_logging": lambda: self._settings["security"]["audit_logging"],
-            "anonymization": lambda: False  # Placeholder
-        }
-
-        if feature in feature_map:
-            return feature_map[feature]()
-        return False
-
 # Factory function
 def create_settings_service() -> SettingsService:
-    """Create an instance of the mock SettingsService."""
-    return MockSettingsService()
+    """Create an instance of the SettingsService."""
+    return SettingsServiceImpl()
