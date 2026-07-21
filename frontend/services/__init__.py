@@ -102,7 +102,6 @@ class LogEntry:
     timestamp: datetime
     request_id: str
     hospital: str
-    prediction: str
     latency_ms: int
     drift_score: float
     model_used: str
@@ -195,35 +194,6 @@ class ValidationService:
 
         Returns:
             ValidationResult: Validation results
-        """
-        raise NotImplementedError
-
-
-class DriftService:
-    """Service for detecting data drift in medical images."""
-
-    def detect_drift(self, request_id: str) -> DriftResult:
-        """
-        Detect drift for an image request.
-
-        Args:
-            request_id: ID of the request to analyze
-
-        Returns:
-            DriftResult: Drift detection results
-        """
-        raise NotImplementedError
-
-    def get_drift_history(self, hospital_id: str, limit: int = 100) -> List[DriftResult]:
-        """
-        Get drift detection history for a hospital.
-
-        Args:
-            hospital_id: ID of the hospital
-            limit: Maximum number of results to return
-
-        Returns:
-            List of DriftResult objects
         """
         raise NotImplementedError
 
@@ -510,7 +480,6 @@ class StorageService:
         """
         raise NotImplementedError
 
-
 class HospitalService:
     """Service for managing hospital information."""
 
@@ -559,7 +528,6 @@ class HospitalService:
             True if successful, False otherwise
         """
         raise NotImplementedError
-
 
 class LoggingService:
     """Service for collecting and managing system logs."""
@@ -614,7 +582,6 @@ class LoggingService:
         """
         raise NotImplementedError
 
-
 class SettingsService:
     """Service for managing system settings and configuration."""
 
@@ -623,8 +590,7 @@ class SettingsService:
         Get all system settings.
 
         Returns:
-            Returns:
-                Dictionary containing all system settings
+            Dictionary containing all system settings
         """
         raise NotImplementedError
 
@@ -653,14 +619,7 @@ class SettingsService:
         """
         raise NotImplementedError
 
-
-@dataclass
-class SystemHealth:
-    """System health status."""
-    status: str = "healthy"
-
-
-# Factory functions for creating service instances (to be implemented based on actual backend)
+# Factory functions for creating service instances
 def create_ingestion_service() -> IngestionService:
     """Create an instance of the IngestionService."""
     from .ingestion_service import IngestionServiceImpl
@@ -668,9 +627,8 @@ def create_ingestion_service() -> IngestionService:
 
 def create_validation_service() -> ValidationService:
     """Create an instance of the ValidationService."""
-    # TODO: Implement real validation service that calls backend API
-    from .validation_service import MockValidationService
-    return MockValidationService()
+    from .validation_service import ValidationServiceImpl
+    return ValidationServiceImpl()
 
 def create_drift_service() -> DriftService:
     """Create an instance of the DriftService."""
@@ -684,9 +642,8 @@ def create_adaptation_service() -> AdaptationService:
 
 def create_registry_service() -> RegistryService:
     """Create an instance of the RegistryService."""
-    # TODO: Implement real registry service that calls backend API
-    from .registry_service import MockRegistryService
-    return MockRegistryService()
+    from .registry_service import RegistryServiceImpl
+    return RegistryServiceImpl()
 
 def create_inference_service() -> InferenceService:
     """Create an instance of the InferenceService."""
@@ -695,42 +652,35 @@ def create_inference_service() -> InferenceService:
 
 def create_monitoring_service() -> MonitoringService:
     """Create an instance of the MonitoringService."""
-    # TODO: Implement real monitoring service that calls backend API
-    from .monitoring_service import MockMonitoringService
-    return MockMonitoringService()
+    from .monitoring_service import MonitoringServiceImpl
+    return MonitoringServiceImpl()
 
 def create_feedback_service() -> FeedbackService:
     """Create an instance of the FeedbackService."""
-    # TODO: Implement real feedback service that calls backend API
-    from .feedback_service import MockFeedbackService
-    return MockFeedbackService()
+    from .feedback_service import FeedbackServiceImpl
+    return FeedbackServiceImpl()
 
 def create_alert_service() -> AlertService:
     """Create an instance of the AlertService."""
-    # TODO: Implement real alert service that calls backend API
-    from .alert_service import MockAlertService
-    return MockAlertService()
+    from .alert_service import AlertServiceImpl
+    return AlertServiceImpl()
 
 def create_storage_service() -> StorageService:
     """Create an instance of the StorageService."""
-    # TODO: Implement real storage service that calls backend API (MinIO/S3)
-    from .storage_service import MockStorageService
-    return MockStorageService()
+    from .storage_service import StorageServiceImpl
+    return StorageServiceImpl()
 
 def create_hospital_service() -> HospitalService:
     """Create an instance of the HospitalService."""
-    # TODO: Implement real hospital service that calls backend API
-    from .hospital_service import MockHospitalService
-    return MockHospitalService()
+    from .hospital_service import HospitalServiceImpl
+    return HospitalServiceImpl()
 
 def create_logging_service() -> LoggingService:
     """Create an instance of the LoggingService."""
-    # TODO: Implement real logging service that calls backend API
-    from .logging_service import MockLoggingService
-    return MockLoggingService()
+    from .logging_service import LoggingServiceImpl
+    return LoggingServiceImpl()
 
 def create_settings_service() -> SettingsService:
     """Create an instance of the SettingsService."""
-    # TODO: Implement real settings service that calls backend API
-    from .settings_service import MockSettingsService
-    return MockSettingsService()
+    from .settings_service import SettingsServiceImpl
+    return SettingsServiceImpl()
