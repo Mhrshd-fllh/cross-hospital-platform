@@ -12,9 +12,18 @@ import io
 
 # Configuration from environment variables with defaults
 ALLOWED_EXTENSIONS = {'.dcm', '.nii', '.jpg', '.jpeg', '.zip'}
-CANONICAL_RESOLUTION = tuple(map(int, os.getenv("CANONICAL_RESOLUTION", "320,320").split(',')))
-MIN_DIMENSION = int(os.getenv("MIN_DIMENSION", "64"))
-MAX_DIMENSION = int(os.getenv("MAX_DIMENSION", "2048"))
+_canonical_resolution = os.getenv("CANONICAL_RESOLUTION", "320,320")
+if not _canonical_resolution:
+    _canonical_resolution = "320,320"
+CANONICAL_RESOLUTION = tuple(map(int, _canonical_resolution.split(',')))
+_min_dimension = os.getenv("MIN_DIMENSION", "64")
+if not _min_dimension:
+    _min_dimension = "64"
+MIN_DIMENSION = int(_min_dimension)
+_max_dimension = os.getenv("MAX_DIMENSION", "2048")
+if not _max_dimension:
+    _max_dimension = "2048"
+MAX_DIMENSION = int(_max_dimension)
 
 def validate_image_file(file_bytes: bytes, filename: str) -> Tuple[bool, str]:
     """
