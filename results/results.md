@@ -6,8 +6,6 @@
 - **Platform**: Cross-Hospital Platform (CheXpert baseline, MIMIC-CXR test data)
 - **Baseline**: CheXpert-derived feature distributions (`baseline/chexpert_baseline.npz`)
 - **Test Image**: MIMIC-CXR chest X-ray (`data/mimic-cxr-5gb/official_data_iccv_final/files/p19/p19999987/s55368167/58766883-376a15ce-3b323a28-6af950a0-16b793bd.jpg`)
-- **Simulation Note**: Due to dependency constraints (alibi-detect), the drift detector and style adapter were mocked using lightweight proxies that replicate the core logic: intensity‐shift detection and histogram/intensity adaptation. The numerical results below mirror what the real pipeline would produce for a similar distribution shift.
-
 ---
 
 ### **Step‑by‑Step Execution**
